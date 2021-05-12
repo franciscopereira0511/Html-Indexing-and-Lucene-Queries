@@ -16,6 +16,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.text.Normalizer;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -30,8 +31,9 @@ public class PruebaJsoup {
     
     public static void main(String[] args) throws IOException {
         loadStopWords("E:\\Projects\\TEC\\III SEMESTRE\\prueba-htm\\stopWords.txt");
-        PruebaJsoup.readDocumentFromCollection("E:\\Projects\\TEC\\III SEMESTRE\\Geografia");
+        //PruebaJsoup.readDocumentFromCollection("E:\\Projects\\TEC\\III SEMESTRE\\Geografia");
         //PruebaJsoup.readDocumentFromCollection("E:\\Projects\\TEC\\III SEMESTRE\\Geografia\\América\\Estados_soberanos");
+        PruebaJsoup.readDocumentFromCollection("E:\\Projects\\TEC\\III SEMESTRE\\Geografia\\África\\Estados_no_reconocidos");
         //PruebaJsoup.readDocumentFromCollection("E:\\Projects\\TEC\\III SEMESTRE\\prueba-htm");
         
     }
@@ -57,8 +59,9 @@ public class PruebaJsoup {
     public static void readDocumentContents( File input ) throws IOException {
         // Declares doc variables
         Document doc;
-        String titulo, texto, ref, resumen, url, latinized, removeWhiteSpace,cleanText;
+        String titulo, formattedTitulo, texto, ref, formattedRef, resumen, url, latinized, removeWhiteSpace,cleanText;
         String[] wordList;
+        
         // Parses de input document
         doc = Jsoup.parse(input, "UTF-8", "");
         // Get the document TITLE markup
@@ -67,21 +70,44 @@ public class PruebaJsoup {
         texto = doc.body().getElementsByTag("p").text();
         // Get ALL the elements with the tag <a>
         ref = doc.body().getElementsByTag("a").text();
+        
+        // Formats title to remove accent marks and leaving the ñ intact
+        formattedTitulo = titulo;
+        
+        formattedTitulo = formattedTitulo.toLowerCase();
+        formattedTitulo = formattedTitulo.replace("ñ", "\\0101");
+        formattedTitulo = Normalizer.normalize(formattedTitulo, Normalizer.Form.NFD);
+        formattedTitulo = formattedTitulo.replaceAll("[\\p{InCombiningDiacriticalMarks}]", "");
+        formattedTitulo = formattedTitulo.replace("\\0101", "ñ");
+        
+        // Formats ref to remove accent marks and leaving the ñ intact
+        formattedRef = ref;
+        
+        formattedRef = formattedRef.toLowerCase();
+        formattedRef = formattedRef.replace("ñ", "\\0101");
+        formattedRef = Normalizer.normalize(formattedRef, Normalizer.Form.NFD);
+        formattedRef = formattedRef.replaceAll("[\\p{InCombiningDiacriticalMarks}]", "");
+        formattedRef = formattedRef.replace("\\0101", "ñ");
+        
         // Captures first 200 characters of body
         resumen = String.format("%.200s", texto);
+        
         // Captures document relative route
         url = input.getPath();
+        
         // Formats text in 3 steps: removes other alphabets, removes reduntant whitespace, removes stopwords
         latinized = texto.replaceAll("[^A-Za-zÁÉÍÓÚÜáéíóúüÑñ ]+", "");
         removeWhiteSpace = latinized.replaceAll("^ +| +$|( )+", "$1");
         cleanText = removeStopWordsFromDocument(removeWhiteSpace);
+        
         // Separates each word from the formatted variable into wordList
         wordList = cleanText.split("\\s+");
+        
         // Print outputs
-        System.out.println("Título: " + titulo);
+        System.out.println("Título: " + formattedTitulo);
         System.out.println("Texto: " + texto);
         System.out.println("Texto Formateado: " + cleanText);
-        System.out.println("Referencias: " + ref);
+        System.out.println("Referencias: " + formattedRef);
         System.out.println("Resumen: " + resumen);
         System.out.println("Cantidad de palabras: " + wordList.length);
         System.out.println("Ruta: " + url);
